@@ -33,7 +33,7 @@ export class PusherChannel extends Channel {
     /**
      * Create a new class instance.
      */
-    constructor(pusher: any, name: any, options: any) {
+    constructor(pusher: any, name: any, options: any, auth = null) {
         super();
 
         this.name = name;
@@ -41,7 +41,11 @@ export class PusherChannel extends Channel {
         this.options = options;
         this.eventFormatter = new EventFormatter(this.options.namespace);
 
-        this.subscribe();
+        if (!auth) {
+            this.subscribe();
+        } else {
+            this.subscribeSilently(auth);
+        }
     }
 
     /**
@@ -49,6 +53,21 @@ export class PusherChannel extends Channel {
      */
     subscribe(): any {
         this.subscription = this.pusher.subscribe(this.name);
+    }
+
+    subscribeSilently(data): void {
+        if (data) {
+            let pusher = this.pusher;
+            let channel = pusher.channels.add(this.name, pusher);
+
+            channel.pusher.send_event('pusher:subscribe', {
+                auth: data.auth,
+                channel_data: data.channel_data,
+                channel: this.name
+            })
+
+            this.subscription = channel;
+        }
     }
 
     /**

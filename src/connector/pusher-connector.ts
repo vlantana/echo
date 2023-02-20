@@ -60,6 +60,28 @@ export class PusherConnector extends Connector {
     }
 
     /**
+     * Get a channel instance by name.
+     */
+    channelBulk(names: Array<string>): object {
+        let authenticatedChannels = this.bulkAuthentiaction(names)
+
+        for (const key in authenticatedChannels) {
+            let data = authenticatedChannels[key];
+
+            if (!this.channels[key]) {
+                this.channels[key] = new PusherChannel(
+                    this.pusher,
+                    key,
+                    this.options,
+                    data
+                );
+            }
+        }
+
+        return this.channels;
+    }
+
+    /**
      * Get a private channel instance by name.
      */
     privateChannel(name: string): PusherChannel {
@@ -68,6 +90,28 @@ export class PusherConnector extends Connector {
         }
 
         return this.channels['private-' + name];
+    }
+
+    /**
+     * Get a private channel instance by name.
+     */
+    privateChannelBulk(names: Array<string>): object {
+        let authenticatedChannels = this.bulkAuthentiaction(names)
+
+        for (const key in authenticatedChannels) {
+            let data = authenticatedChannels[key];
+
+            if (!this.channels[key]) {
+                this.channels[key] = new PusherPrivateChannel(
+                    this.pusher,
+                    key,
+                    this.options,
+                    data
+                );
+            }
+        }
+
+        return this.channels;
     }
 
     /**
@@ -98,6 +142,28 @@ export class PusherConnector extends Connector {
         }
 
         return this.channels['presence-' + name];
+    }
+
+    /**
+     * Get presence channel instances by array.
+     */
+    presenceChannelBulk(names: Array<string>): object {
+        let authenticatedChannels = this.bulkAuthentiaction(names)
+
+        for (const key in authenticatedChannels) {
+            let data = authenticatedChannels[key];
+
+            if (!this.channels[key]) {
+                this.channels[key] = new PusherPresenceChannel(
+                    this.pusher,
+                    key,
+                    this.options,
+                    data
+                );
+            }
+        }
+
+        return this.channels;
     }
 
     /**
@@ -134,5 +200,46 @@ export class PusherConnector extends Connector {
      */
     disconnect(): void {
         this.pusher.disconnect();
+    }
+
+    /**
+     *
+     */
+    bulkAuthentiaction(names: Array<string>) {
+        let url = window.location.origin + this.options.bulkAuthEndpoint;
+        let xhr = new XMLHttpRequest();
+        let data = JSON.stringify({
+            socket_id: this.socketId(),
+            channel_names: names
+        });
+
+        let authChannels = {};
+
+        xhr.open('POST', url, false);
+
+        xhr.setRequestHeader('Content-type', 'application/json; charset=UTF-8');
+        for (let headerName in this.options.auth.headers) {
+            xhr.setRequestHeader(headerName, this.options.auth.headers[headerName]);
+        }
+
+        xhr.onload = function () {
+            if(xhr.status === 200) {
+                let response = JSON.parse(xhr.response);
+                if (typeof response == 'object') {
+                    for (const key in response) {
+                        // eslint-disable-next-line no-prototype-builtins
+                        if (response.hasOwnProperty(key)) {
+                            if (response[key]) {
+                                authChannels[key] = response[key]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        xhr.send(data);
+
+        return authChannels;
     }
 }

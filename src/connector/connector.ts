@@ -9,6 +9,7 @@ export abstract class Connector {
             headers: {},
         },
         authEndpoint: '/broadcasting/auth',
+        bulkAuthEndpoint: '/broadcasting/bulk_auth',
         userAuthentication: {
             endpoint: '/broadcasting/user-auth',
             headers: {},

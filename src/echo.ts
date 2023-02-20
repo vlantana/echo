@@ -35,6 +35,13 @@ export default class Echo {
     }
 
     /**
+     * Get a channel instance by name.
+     */
+    channelBulk(channels: Array<string>): object {
+        return this.connector.channelBulk(channels);
+    }
+
+    /**
      * Create a new connection.
      */
     connect(): void {
@@ -61,6 +68,18 @@ export default class Echo {
      */
     join(channel: string): PresenceChannel {
         return this.connector.presenceChannel(channel);
+    }
+
+    /**
+     * Get presence channels by array
+     */
+    joinBulk(channels): object {
+        for (let i=0; i<channels.length; i++) {
+            if (channels[i].slice(0,9) !== 'presence-') {
+                channels[i] = 'presence-' + channels[i];
+            }
+        }
+        return this.connector.presenceChannelBulk(channels);
     }
 
     /**
@@ -98,6 +117,19 @@ export default class Echo {
      */
     private(channel: string): Channel {
         return this.connector.privateChannel(channel);
+    }
+
+    /**
+     * Get a private channel instance by name.
+     */
+    privateBulk(channels): object {
+        for (let i=0; i<channels.length; i++) {
+            if (channels[i].slice(0,9) !== 'private-') {
+                channels[i] = 'private-' + channels[i];
+            }
+        }
+
+        return this.connector.privateChannelBulk(channels);
     }
 
     /**
